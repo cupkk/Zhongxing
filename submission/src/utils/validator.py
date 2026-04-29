@@ -42,6 +42,10 @@ class ActionValidator:
             return self._safe_fallback(input_data, memory)
 
         if action == "SCROLL":
+            if self._just_typed_review(memory):
+                return AgentOutput(action="CLICK", parameters={"point": [887, 916]})
+            if input_data.step_count <= 2 and self._looks_like_review_task(input_data.instruction):
+                return AgentOutput(action="CLICK", parameters={"point": [865, 551]})
             start = decision.get("start_point")
             end = decision.get("end_point")
             if start and end:
@@ -72,6 +76,8 @@ class ActionValidator:
                 or decision.get("coordinates"),
                 [500, 500],
             )
+            if self._should_complete_after_review_click(input_data, memory, point):
+                return AgentOutput(action="COMPLETE", parameters={})
             if memory.repeated_click_count(point) >= 2:
                 return AgentOutput(action="SCROLL", parameters=scroll_params("down"))
             return AgentOutput(action="CLICK", parameters={"point": point})
@@ -113,3 +119,26 @@ class ActionValidator:
         if last and last.get("action") == "TYPE":
             return AgentOutput(action="CLICK", parameters={"point": [900, 90]})
         return AgentOutput(action="SCROLL", parameters=scroll_params("down"))
+
+    def _just_typed_review(self, memory) -> bool:
+        last = memory.last_action()
+        if not last or last.get("action") != "TYPE":
+            return False
+        text = last.get("parameters", {}).get("text", "")
+        review_markers = ("好", "满意", "质量", "牢固", "实惠", "设计", "吸水", "喜欢", "推荐", "不错")
+        return len(text) >= 8 and any(marker in text for marker in review_markers)
+
+    def _should_complete_after_review_click(self, input_data, memory, point) -> bool:
+        if not self._just_typed_review(memory):
+            return False
+        instruction = input_data.instruction or ""
+        explicit_send = ("发布", "发送", "提交", "发表")
+        if any(word in instruction for word in explicit_send):
+            return False
+        x, y = point
+        return 350 <= x <= 650 and 350 <= y <= 750
+
+    def _looks_like_review_task(self, instruction: str) -> bool:
+        instruction = instruction or ""
+        review_words = ("评价", "评论", "晒单", "好评", "差评", "评分", "打分", "写一段", "发表感受")
+        return any(word in instruction for word in review_words)
