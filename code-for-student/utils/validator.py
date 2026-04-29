@@ -1,0 +1,115 @@
+"""Validate and normalize model decisions into AgentOutput."""
+
+from __future__ import annotations
+
+from typing import Any, Dict
+
+from agent_base import AgentOutput
+
+from .action_schema import (
+    clean_text,
+    clamp_point,
+    is_generic_text,
+    normalize_action,
+    scroll_params,
+)
+from .app_map import normalize_app_name
+
+
+class ActionValidator:
+    def validate(self, decision: Dict[str, Any], input_data, memory, task_slots) -> AgentOutput:
+        decision = decision or {}
+        action = normalize_action(decision.get("action") or decision.get("next_action"))
+
+        if action == "OPEN":
+            app_name = normalize_app_name(decision.get("app_name", ""), input_data.instruction)
+            if not app_name:
+                app_name = task_slots.app_name
+            if memory.has_opened(app_name) and input_data.step_count > 1:
+                return self._safe_fallback(input_data, memory)
+            if app_name:
+                return AgentOutput(action="OPEN", parameters={"app_name": app_name})
+            return self._safe_fallback(input_data, memory)
+
+        if action == "TYPE":
+            text = clean_text(decision.get("text") or decision.get("content"))
+            if is_generic_text(text):
+                text = task_slots.next_type_text(memory.typed_texts)
+            if text in memory.typed_texts:
+                return self._safe_fallback(input_data, memory)
+            if text:
+                return AgentOutput(action="TYPE", parameters={"text": text})
+            return self._safe_fallback(input_data, memory)
+
+        if action == "SCROLL":
+            start = decision.get("start_point")
+            end = decision.get("end_point")
+            if start and end:
+                return AgentOutput(
+                    action="SCROLL",
+                    parameters={
+                        "start_point": clamp_point(start, [500, 800]),
+                        "end_point": clamp_point(end, [500, 300]),
+                    },
+                )
+            return AgentOutput(
+                action="SCROLL",
+                parameters=scroll_params(decision.get("scroll_direction", "down")),
+            )
+
+        if action == "COMPLETE":
+            if decision.get("force_complete"):
+                return AgentOutput(action="COMPLETE", parameters={})
+            if self._can_complete(input_data, memory, task_slots):
+                return AgentOutput(action="COMPLETE", parameters={})
+            return self._safe_fallback(input_data, memory)
+
+        if action == "CLICK":
+            point = clamp_point(
+                decision.get("point")
+                or decision.get("position")
+                or decision.get("coordinate")
+                or decision.get("coordinates"),
+                [500, 500],
+            )
+            if memory.repeated_click_count(point) >= 2:
+                return AgentOutput(action="SCROLL", parameters=scroll_params("down"))
+            return AgentOutput(action="CLICK", parameters={"point": point})
+
+        return self._safe_fallback(input_data, memory)
+
+    def _can_complete(self, input_data, memory, task_slots) -> bool:
+        last = memory.last_action()
+        if not last:
+            return False
+
+        instruction = input_data.instruction or ""
+        simple_open_task = (
+            task_slots.app_name
+            and instruction.strip().startswith(("打开", "启动"))
+            and len(memory.actions) >= 1
+        )
+        if simple_open_task:
+            return True
+
+        min_actions = 3
+        complex_words = ("评论", "购买", "下单", "打车", "导航", "航班", "酒店", "筛选", "收藏", "点赞", "下载")
+        if any(word in instruction for word in complex_words):
+            min_actions = 5
+        if len(memory.actions) < min_actions:
+            return False
+
+        if last.get("action") in {"OPEN", "TYPE"}:
+            return False
+
+        # For tasks with typed slots, require that at least one intended text has been typed.
+        if task_slots.query_candidates and not memory.typed_texts:
+            return False
+
+        return True
+
+    def _safe_fallback(self, input_data, memory) -> AgentOutput:
+        last = memory.last_action()
+        if last and last.get("action") == "TYPE":
+            return AgentOutput(action="CLICK", parameters={"point": [900, 90]})
+        return AgentOutput(action="SCROLL", parameters=scroll_params("down"))
