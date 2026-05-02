@@ -1,0 +1,56 @@
+[
+  {
+    "title": "Qwen2.5-VL Official Blog",
+    "url": "https://qwenlm.github.io/blog/qwen2.5-vl/",
+    "type": "official_blog",
+    "used_for": "VLM model choice, visual grounding and GUI agent capability reference"
+  },
+  {
+    "title": "Qwen2.5-VL Technical Report",
+    "url": "https://arxiv.org/abs/2502.13923",
+    "type": "paper",
+    "used_for": "Qwen visual localization and structured visual reasoning background"
+  },
+  {
+    "title": "Qwen3-VL Technical Report",
+    "url": "https://arxiv.org/abs/2511.21631",
+    "type": "paper",
+    "used_for": "newer Qwen-VL agentic decision-making reference"
+  },
+  {
+    "title": "Mobile-Agent: Autonomous Multi-Modal Mobile Device Agent with Visual Perception",
+    "url": "https://arxiv.org/abs/2401.16158",
+    "type": "paper",
+    "used_for": "mobile task decomposition, visual perception and memory design"
+  },
+  {
+    "title": "AppAgent: Multimodal Agents as Smartphone Users",
+    "url": "https://arxiv.org/abs/2312.13771",
+    "type": "paper",
+    "used_for": "simplified action space and reusable app-operation knowledge"
+  },
+  {
+    "title": "SeeClick: Harnessing GUI Grounding for Advanced Visual GUI Agents",
+    "url": "https://arxiv.org/abs/2401.10935",
+    "type": "paper",
+    "used_for": "GUI grounding and coordinate reliability"
+  },
+  {
+    "title": "OS-ATLAS: A Foundation Action Model for Generalist GUI Agents",
+    "url": "https://arxiv.org/abs/2410.23218",
+    "type": "paper",
+    "used_for": "cross-platform GUI grounding and action model generalization"
+  },
+  {
+    "title": "UI-TARS: Pioneering Automated GUI Interaction with Native Agents",
+    "url": "https://arxiv.org/abs/2501.12326",
+    "type": "paper",
+    "used_for": "unified action modeling, history, reasoning and reflection"
+  },
+  {
+    "title": "AndroidWorld: A Dynamic Benchmarking Environment for Autonomous Agents",
+    "url": "https://arxiv.org/abs/2405.14573",
+    "type": "paper",
+    "used_for": "hidden benchmark generalization and dynamic task design"
+  }
+]

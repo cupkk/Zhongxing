@@ -14,9 +14,14 @@ from .action_schema import (
     scroll_params,
 )
 from .app_map import normalize_app_name
+from .state_machine import ReviewFinishStateMachine
+from .ui_elements import find_by_id
 
 
 class ActionValidator:
+    def __init__(self):
+        self.review_state_machine = ReviewFinishStateMachine()
+
     def validate(self, decision: Dict[str, Any], input_data, memory, task_slots) -> AgentOutput:
         decision = decision or {}
         action = normalize_action(decision.get("action") or decision.get("next_action"))
@@ -73,13 +78,7 @@ class ActionValidator:
             return self._safe_fallback(input_data, memory)
 
         if action == "CLICK":
-            point = clamp_point(
-                decision.get("point")
-                or decision.get("position")
-                or decision.get("coordinate")
-                or decision.get("coordinates"),
-                [500, 500],
-            )
+            point = self._click_point_from_decision(decision, memory)
             review_output = self._post_review_action(input_data, memory, task_slots, "CLICK", point)
             if review_output:
                 return review_output
@@ -88,6 +87,25 @@ class ActionValidator:
             return AgentOutput(action="CLICK", parameters={"point": point})
 
         return self._safe_fallback(input_data, memory)
+
+    def _click_point_from_decision(self, decision: Dict[str, Any], memory) -> list:
+        target_id = decision.get("target_id") or decision.get("element_id")
+        if target_id not in (None, "", 0, "0"):
+            try:
+                element = find_by_id(getattr(memory, "last_candidates", []), int(target_id))
+                if element:
+                    return element.center
+            except (TypeError, ValueError):
+                pass
+        raw_point = (
+            decision.get("point")
+            or decision.get("position")
+            or decision.get("coordinate")
+            or decision.get("coordinates")
+        )
+        if raw_point:
+            return clamp_point(raw_point, [500, 500])
+        return [500, 500]
 
     def _can_complete(self, input_data, memory, task_slots) -> bool:
         last = memory.last_action()
@@ -139,43 +157,33 @@ class ActionValidator:
 
         app = getattr(task_slots, "app_name", "") or ""
         instruction = input_data.instruction or ""
-        ecommerce_apps = {"京东", "拼多多", "淘宝"}
-        social_apps = {"抖音", "快手", "小红书", "微博", "爱奇艺", "哔哩哔哩", "腾讯视频"}
         ecommerce_intent = self._looks_like_ecommerce_review(instruction)
         social_intent = self._looks_like_social_comment(instruction)
-        social_flow = self._looks_like_social_review_flow(memory)
+        state_decision = self.review_state_machine.decide(
+            action=action,
+            point=point,
+            input_data=input_data,
+            memory=memory,
+            task_slots=task_slots,
+            ecommerce_intent=ecommerce_intent,
+            social_intent=social_intent,
+        )
+        if state_decision:
+            return self._agent_output_from_decision(state_decision)
 
-        explicit_publish = any(word in instruction for word in ("发布", "发送", "提交", "发表"))
-        if app in social_apps or explicit_publish or social_intent or social_flow:
-            send_point = self._review_send_point(social_flow)
-            if action == "SCROLL":
-                return AgentOutput(action="CLICK", parameters={"point": send_point})
-            if action == "COMPLETE":
-                return AgentOutput(action="CLICK", parameters={"point": send_point})
-            if point:
-                x, y = point
-                if y >= 850 or x <= 250 or (x >= 750 and y <= 200):
-                    return AgentOutput(action="CLICK", parameters={"point": send_point})
-            return None
-
-        if app in ecommerce_apps or (ecommerce_intent and not social_intent):
+        if action == "CLICK" and point and self._should_complete_after_review_click(input_data, memory, point):
             return AgentOutput(action="COMPLETE", parameters={})
-
-        if action == "CLICK" and point:
-            x, y = point
-            if y >= 850:
-                if x <= 250 or x >= 750:
-                    return AgentOutput(action="CLICK", parameters={"point": [887, 916]})
-                return AgentOutput(action="COMPLETE", parameters={})
-            if x >= 750 and y <= 200:
-                return AgentOutput(action="CLICK", parameters={"point": [887, 916]})
-            if self._should_complete_after_review_click(input_data, memory, point):
-                return AgentOutput(action="COMPLETE", parameters={})
-        if action == "COMPLETE":
-            return AgentOutput(action="COMPLETE", parameters={})
-        if action == "SCROLL":
-            return AgentOutput(action="CLICK", parameters={"point": [887, 916]})
         return None
+
+    @staticmethod
+    def _agent_output_from_decision(decision: Dict[str, Any]) -> AgentOutput:
+        if decision.get("action") == "CLICK":
+            return AgentOutput(action="CLICK", parameters={"point": decision.get("point", [887, 916])})
+        if decision.get("action") == "COMPLETE":
+            return AgentOutput(action="COMPLETE", parameters={})
+        if decision.get("action") == "SCROLL":
+            return AgentOutput(action="SCROLL", parameters=scroll_params(decision.get("scroll_direction", "down")))
+        return AgentOutput(action="COMPLETE", parameters={})
 
     def _should_complete_after_review_click(self, input_data, memory, point) -> bool:
         if not self._just_typed_review(memory):
@@ -201,28 +209,3 @@ class ActionValidator:
         instruction = instruction or ""
         social_words = ("评论", "留言", "弹幕", "回复")
         return any(word in instruction for word in social_words)
-
-    def _looks_like_social_review_flow(self, memory) -> bool:
-        clicks = [
-            action.get("parameters", {}).get("point", [])
-            for action in memory.actions
-            if action.get("action") == "CLICK"
-        ]
-        if not clicks or len(clicks[0]) != 2:
-            return False
-        first_x, first_y = clicks[0]
-        if not (first_x < 760 and 450 <= first_y <= 760):
-            return False
-        has_top_option_click = any(
-            len(point) == 2 and point[0] >= 650 and point[1] <= 220 for point in clicks[1:]
-        )
-        has_large_textbox_click = any(
-            len(point) == 2 and 300 <= point[0] <= 650 and 300 <= point[1] <= 560 for point in clicks[1:]
-        )
-        return has_top_option_click and has_large_textbox_click
-
-    @staticmethod
-    def _review_send_point(social_flow: bool):
-        if social_flow:
-            return [500, 938]
-        return [887, 916]

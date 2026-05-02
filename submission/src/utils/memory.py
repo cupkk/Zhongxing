@@ -14,6 +14,9 @@ class AgentMemory:
         self.opened_app: Optional[str] = None
         self.typed_texts: List[str] = []
         self.task_slots = None
+        self.stage = "unknown"
+        self.pending_after_type: Optional[str] = None
+        self.last_candidates: List[Any] = []
 
     def update(self, output, input_data):
         record = {
@@ -28,6 +31,18 @@ class AgentMemory:
             text = output.parameters.get("text", "")
             if text:
                 self.typed_texts.append(text)
+            self.pending_after_type = self._classify_typed_text(text)
+            self.stage = self.pending_after_type or "typed"
+        elif output.action == "CLICK":
+            if self.pending_after_type:
+                self.stage = f"{self.pending_after_type}_submitted"
+                self.pending_after_type = None
+            else:
+                self.stage = "clicked"
+        elif output.action == "SCROLL":
+            self.stage = "scrolled"
+        elif output.action == "COMPLETE":
+            self.stage = "done"
 
     def recent_actions(self, limit: int = 5) -> List[Dict[str, Any]]:
         return self.actions[-limit:]
@@ -54,3 +69,11 @@ class AgentMemory:
                 break
         return count
 
+    @staticmethod
+    def _classify_typed_text(text: str) -> Optional[str]:
+        if not text:
+            return None
+        review_markers = ("好", "满意", "质量", "牢固", "实惠", "设计", "吸水", "喜欢", "推荐", "不错")
+        if len(text) >= 8 and any(marker in text for marker in review_markers):
+            return "review_finish"
+        return "submit_after_type"

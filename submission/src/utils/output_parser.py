@@ -103,6 +103,9 @@ class OutputParser:
         decision: Dict[str, Any] = {"action": action}
 
         if action == "CLICK":
+            target_id = self._extract_target_id(rest)
+            if target_id is not None:
+                decision["target_id"] = target_id
             nums = re.findall(r"-?\d+(?:\.\d+)?", rest)
             if len(nums) >= 2:
                 decision["point"] = [float(nums[0]), float(nums[1])]
@@ -128,6 +131,9 @@ class OutputParser:
         decision: Dict[str, Any] = {"action": action}
 
         if action == "CLICK":
+            target_id = self._extract_target_id(args)
+            if target_id is not None:
+                decision["target_id"] = target_id
             nums = re.findall(r"-?\d+(?:\.\d+)?", args)
             if len(nums) >= 2:
                 decision["point"] = [float(nums[0]), float(nums[1])]
@@ -156,6 +162,10 @@ class OutputParser:
 
         decision: Dict[str, Any] = {}
         if re.search(r"(CLICK|click|点击|点按|轻点)", text):
+            target_id = self._extract_target_id(text)
+            if target_id is not None:
+                decision = {"action": "CLICK", "target_id": target_id}
+                return decision
             nums = re.findall(r"-?\d+(?:\.\d+)?", text)
             if len(nums) >= 2:
                 decision = {"action": "CLICK", "point": [float(nums[0]), float(nums[1])]}
@@ -185,3 +195,13 @@ class OutputParser:
         if decision:
             decision["action"] = normalize_action(decision.get("action"))
         return decision
+
+    @staticmethod
+    def _extract_target_id(text: str) -> int | None:
+        match = re.search(r"(?:target_id|element_id|候选(?:元素)?id|目标id)\s*[:=：]\s*['\"]?(\d+)", text, re.I)
+        if not match:
+            return None
+        try:
+            return int(match.group(1))
+        except ValueError:
+            return None
