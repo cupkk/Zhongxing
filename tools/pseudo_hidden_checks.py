@@ -223,42 +223,121 @@ def build_review_finish_cases() -> List[CheckCase]:
             )
         )
 
-    cases.append(
-        CheckCase(
-            "form_review_complete_to_top_submit",
-            "去抖音给手机支架写评价：这个东西很好用，质量不错，使用方便，值得推荐！",
-            6,
-            prior_actions=[
-                make_click_action(1, [605, 695]),
-                make_click_action(2, [500, 520]),
-                make_click_action(3, [700, 145]),
-                make_click_action(4, [400, 370]),
-                make_type_action(5, review_texts[0]),
-            ],
-            typed_texts=[review_texts[0]],
-            pending_after_type="review_finish",
-            decision={"action": "COMPLETE"},
-            predicate=expect_point([695, 145]),
+    douyin_finish_decisions = [
+        ("complete", {"action": "COMPLETE"}),
+        ("top_raw", {"action": "CLICK", "point": [695, 145]}),
+        ("top_right_raw", {"action": "CLICK", "point": [885, 125]}),
+        ("bottom_send", {"action": "CLICK", "point": [887, 916]}),
+        ("scroll", {"action": "SCROLL", "scroll_direction": "down"}),
+    ]
+    douyin_step_variants = [
+        ([605, 695], [500, 520], [700, 145], [400, 370]),
+        ([605, 695], [500, 520], [695, 145], [420, 365]),
+        ([605, 695], [500, 520], [705, 145], [500, 370]),
+        ([600, 690], [505, 520], [700, 145], [500, 370]),
+    ]
+    for variant_index, points in enumerate(douyin_step_variants, start=1):
+        first, second, third, fourth = points
+        text = review_texts[variant_index % len(review_texts)]
+        for decision_name, decision in douyin_finish_decisions:
+            cases.append(
+                CheckCase(
+                    f"douyin_lp_form_after_type_complete_{variant_index}_{decision_name}",
+                    "去抖音给手机支架写评价：这个手机支架很好用，吸附牢固，设计美观，非常满意！",
+                    6,
+                    prior_actions=[
+                        make_click_action(1, first),
+                        make_click_action(2, second),
+                        make_click_action(3, third),
+                        make_click_action(4, fourth),
+                        make_type_action(5, text),
+                    ],
+                    typed_texts=[text],
+                    pending_after_type="review_finish",
+                    decision=decision,
+                    predicate=expect_action("COMPLETE"),
+                )
+            )
+
+    explicit_publish_words = ["发布", "发送", "提交", "发表"]
+    for index, word in enumerate(explicit_publish_words, start=1):
+        text = review_texts[index % len(review_texts)]
+        cases.append(
+            CheckCase(
+                f"douyin_lp_form_explicit_publish_keeps_click_{index}_{word}",
+                f"去抖音给手机支架写评价并{word}：这个手机支架很好用，吸附牢固，设计美观，非常满意！",
+                6,
+                prior_actions=[
+                    make_click_action(1, [605, 695]),
+                    make_click_action(2, [500, 520]),
+                    make_click_action(3, [700, 145]),
+                    make_click_action(4, [400, 370]),
+                    make_type_action(5, text),
+                ],
+                typed_texts=[text],
+                pending_after_type="review_finish",
+                decision={"action": "COMPLETE"},
+                predicate=expect_point([695, 145]),
+            )
         )
-    )
-    cases.append(
-        CheckCase(
-            "form_review_top_raw_point_snaps_left",
-            "去抖音给手机支架写评价：这个手机支架很好用，吸附牢固，设计美观，非常满意！",
-            6,
-            prior_actions=[
-                make_click_action(1, [605, 695]),
-                make_click_action(2, [500, 520]),
-                make_click_action(3, [695, 145]),
-                make_click_action(4, [420, 365]),
-                make_type_action(5, review_texts[3]),
-            ],
-            typed_texts=[review_texts[3]],
-            pending_after_type="review_finish",
-            decision={"action": "CLICK", "point": [705, 145]},
-            predicate=expect_point([695, 145]),
-        )
-    )
+
+    ecommerce_variants = [
+        ("京东", [842, 836], [500, 692], [420, 450]),
+        ("拼多多", [865, 550], [500, 690], [420, 365]),
+        ("淘宝", [865, 550], [500, 690], [420, 365]),
+    ]
+    ecommerce_finish_decisions = [
+        ("complete", {"action": "COMPLETE"}),
+        ("top_click", {"action": "CLICK", "point": [695, 145]}),
+        ("bottom_send", {"action": "CLICK", "point": [887, 916]}),
+        ("scroll", {"action": "SCROLL", "scroll_direction": "down"}),
+    ]
+    for app_index, (app, entry, form, text_area) in enumerate(ecommerce_variants, start=1):
+        for text_index, text in enumerate(review_texts, start=1):
+            for decision_name, decision in ecommerce_finish_decisions:
+                cases.append(
+                    CheckCase(
+                        f"ecommerce_after_type_stays_complete_{app_index}_{text_index}_{decision_name}_{app}",
+                        f"去{app}评价订单：{text}",
+                        6,
+                        prior_actions=[
+                            make_click_action(1, entry),
+                            make_click_action(2, form),
+                            make_click_action(3, text_area),
+                            make_type_action(5, text),
+                        ],
+                        typed_texts=[text],
+                        pending_after_type="review_finish",
+                        decision=decision,
+                        predicate=expect_action("COMPLETE"),
+                    )
+                )
+
+    comment_decisions = [
+        ("complete", {"action": "COMPLETE"}),
+        ("scroll", {"action": "SCROLL", "scroll_direction": "down"}),
+        ("left_click", {"action": "CLICK", "point": [180, 900]}),
+        ("top_click", {"action": "CLICK", "point": [850, 125]}),
+    ]
+    for app_index, app in enumerate(social_apps, start=1):
+        for decision_name, decision in comment_decisions:
+            text = review_texts[(app_index + len(decision_name)) % len(review_texts)]
+            cases.append(
+                CheckCase(
+                    f"social_comment_after_type_still_sends_{app_index}_{decision_name}_{app}",
+                    f"去{app}视频下面发布评论：{text}",
+                    7,
+                    prior_actions=[
+                        {"step": 1, "action": "OPEN", "parameters": {"app_name": app}},
+                        make_click_action(5, [360, 923]),
+                        make_type_action(6, text),
+                    ],
+                    typed_texts=[text],
+                    pending_after_type="review_finish",
+                    decision=decision,
+                    predicate=expect_point([887, 916]),
+                )
+            )
     return cases
 
 
@@ -695,7 +774,7 @@ def build_cases() -> List[CheckCase]:
     cases.extend(build_review_finish_cases())
     cases.extend(build_candidate_presence_cases())
     cases.extend(build_verifier_cases())
-    assert len(cases) >= 80, len(cases)
+    assert len(cases) >= 150, len(cases)
     return cases
 
 

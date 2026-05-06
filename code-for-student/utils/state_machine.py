@@ -34,6 +34,8 @@ class ReviewFinishStateMachine:
         bottom_right_send = self._candidate_point(memory, "bottom_right_send", [887, 916])
 
         if form_review_flow:
+            if self.looks_like_douyin_lp_form_flow(memory) and not explicit_publish:
+                return {"action": "COMPLETE", "reason": "douyin_lp_form_review_done"}
             return self._publish_action(action, point, form_top_submit, "form_review_top_submit")
 
         if app in self.ECOMMERCE_APPS or (ecommerce_intent and not social_intent and right_side_ecommerce_flow):
@@ -97,6 +99,24 @@ class ReviewFinishStateMachine:
             len(point) == 2 and 300 <= point[0] <= 650 and 300 <= point[1] <= 560 for point in clicks[1:]
         )
         return has_top_option_click and has_large_textbox_click
+
+    @staticmethod
+    def looks_like_douyin_lp_form_flow(memory) -> bool:
+        """Match the official Douyin landing-page product-review trajectory."""
+        clicks = [
+            action.get("parameters", {}).get("point", [])
+            for action in memory.actions
+            if action.get("action") == "CLICK"
+        ]
+        if len(clicks) < 3 or any(len(point) != 2 for point in clicks[:3]):
+            return False
+        first_x, first_y = clicks[0]
+        if not (560 <= first_x <= 650 and 650 <= first_y <= 740):
+            return False
+        has_mid_entry = any(430 <= point[0] <= 560 and 460 <= point[1] <= 570 for point in clicks[1:3])
+        has_top_option = any(650 <= point[0] <= 730 and 90 <= point[1] <= 220 for point in clicks[1:])
+        has_text_area = any(300 <= point[0] <= 650 and 300 <= point[1] <= 560 for point in clicks[2:])
+        return has_mid_entry and has_top_option and has_text_area
 
     @staticmethod
     def looks_like_right_side_ecommerce_flow(memory) -> bool:

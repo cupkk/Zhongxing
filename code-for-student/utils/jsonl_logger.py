@@ -49,6 +49,7 @@ class DecisionLogger:
             },
             "candidates": self._candidates_to_dict(getattr(memory, "last_candidates", [])) if memory else [],
             "memory_stage": getattr(memory, "stage", "unknown") if memory else "unknown",
+            "stage_summary": memory.stage_summary() if memory and hasattr(memory, "stage_summary") else {},
             "pending_after_type": getattr(memory, "pending_after_type", None) if memory else None,
             "error": error,
         }

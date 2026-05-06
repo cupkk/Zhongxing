@@ -39,6 +39,7 @@ class Scenario:
     decision: Dict[str, Any] = field(default_factory=dict)
     expected_action: str = ""
     expected_point: List[int] | None = None
+    expected_stage: str | None = None
 
 
 def make_input(instruction: str, step_count: int) -> AgentInput:
@@ -83,6 +84,11 @@ def run_scenario(scenario: Scenario) -> None:
     if scenario.expected_point is not None:
         assert output.parameters.get("point") == scenario.expected_point, (
             f"{scenario.name}: expected point {scenario.expected_point}, got {output.parameters}"
+        )
+    if scenario.expected_stage is not None:
+        memory.update(output, input_data)
+        assert memory.review_stage == scenario.expected_stage, (
+            f"{scenario.name}: expected review_stage {scenario.expected_stage}, got {memory.review_stage}"
         )
 
 
@@ -194,7 +200,7 @@ def build_scenarios() -> List[Scenario]:
             expected_point=[420, 365],
         ),
         Scenario(
-            name="form_review_after_type_uses_top_submit",
+            name="official_douyin_lp_after_type_completes",
             instruction="去抖音给手机支架写评价：这个手机支架很好用，吸附牢固，设计美观，非常满意！",
             step_count=6,
             prior_actions=[
@@ -207,8 +213,8 @@ def build_scenarios() -> List[Scenario]:
             typed_texts=[review_text],
             pending_after_type="review_finish",
             decision={"action": "COMPLETE"},
-            expected_action="CLICK",
-            expected_point=[695, 145],
+            expected_action="COMPLETE",
+            expected_stage="review_finish_ready",
         ),
         Scenario(
             name="social_comment_after_type_sends_bottom_right",
@@ -226,7 +232,7 @@ def build_scenarios() -> List[Scenario]:
             expected_point=[887, 916],
         ),
         Scenario(
-            name="official_douyin_after_type_top_raw_point_snaps_left",
+            name="official_douyin_after_type_top_raw_point_completes",
             instruction="去抖音给手机支架写评价：这个手机支架很好用，吸附牢固，设计美观，非常满意！",
             step_count=6,
             prior_actions=[
@@ -239,8 +245,7 @@ def build_scenarios() -> List[Scenario]:
             typed_texts=[review_text],
             pending_after_type="review_finish",
             decision={"action": "CLICK", "point": [705, 145]},
-            expected_action="CLICK",
-            expected_point=[695, 145],
+            expected_action="COMPLETE",
         ),
         Scenario(
             name="ecommerce_review_after_type_completes",
@@ -255,6 +260,22 @@ def build_scenarios() -> List[Scenario]:
             typed_texts=["这个充电宝很好用，容量大，充电速度快，值得推荐！"],
             pending_after_type="review_finish",
             decision={"action": "COMPLETE"},
+            expected_action="COMPLETE",
+        ),
+        Scenario(
+            name="pinduoduo_review_after_type_still_completes",
+            instruction="去拼多多评价纸巾：这款纸巾质量很好，吸水性强，柔软亲肤，价格实惠，非常满意！",
+            step_count=6,
+            prior_actions=[
+                {"step": 1, "action": "CLICK", "parameters": {"point": [865, 550]}},
+                {"step": 2, "action": "CLICK", "parameters": {"point": [500, 688]}},
+                {"step": 3, "action": "CLICK", "parameters": {"point": [725, 305]}},
+                {"step": 4, "action": "CLICK", "parameters": {"point": [420, 365]}},
+                {"step": 5, "action": "TYPE", "parameters": {"text": "这款纸巾质量很好，吸水性强，柔软亲肤，价格实惠，非常满意！"}},
+            ],
+            typed_texts=["这款纸巾质量很好，吸水性强，柔软亲肤，价格实惠，非常满意！"],
+            pending_after_type="review_finish",
+            decision={"action": "CLICK", "point": [695, 145]},
             expected_action="COMPLETE",
         ),
     ]

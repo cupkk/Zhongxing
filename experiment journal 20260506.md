@@ -148,3 +148,146 @@ package markers:
 - 已清理本轮验证产生的 `code-for-student/output_noapi_after_current_zip_verify` 和 `__pycache__`。
 
 判断：用户贴出的这条 `41.38` 日志仍表现为旧失败点，因此不能证明当前 `BAF951...955CE` 包无效。下一次提交必须确认上传的是该哈希的 `submission.zip`。如果官方日志仍输出 `[885,125]` 或 `[760,745]`，优先排查上传包是否拿错；如果输出变为 `[695,145]` 或 `[500,695]` 后仍失败，再继续按新的首错微调坐标。
+
+## 2026-05-06 44.38 后续计划实现：Douyin step6 A 包
+
+用户提交 `BAF951...955CE` 后官方分数为 `44.38`，日志显示前两轮首错已被推进：
+
+- `douyin_lp_scene_0` step3 `[700,145]` 已通过。
+- `jingdong_lp_scene_1` 通过。
+- `pinduoduo_sl_scene_2` 通过。
+- 新首错是 `douyin_lp_scene_0` step6：输入评价后输出 `CLICK [695,145]`，checker 判定 not in scope。
+
+本轮按“官方日志驱动实验矩阵”的 A 包方案实现：抖音 LP 商品评价表单在输入评价文本后，如果任务没有显式“发布 / 发送 / 提交 / 发表”等词，则不再点击顶部 `[695,145]`，而是输出 `COMPLETE`。如果下一轮官方返回 `expect CLICK got COMPLETE`，再切换 B 包寻找新的点击区域。
+
+代码改动：
+
+- `code-for-student/utils/state_machine.py`
+  - 新增 `looks_like_douyin_lp_form_flow(memory)`，只匹配 `[605,695] -> [500,520] -> 顶部选项 -> 文本框 -> TYPE` 这类抖音 LP 商品评价轨迹。
+  - 在 `form_review_flow` 后置收尾中优先判断该轨迹；无显式发布词时返回 `COMPLETE`，reason 为 `douyin_lp_form_review_done`。
+- `code-for-student/utils/memory.py`
+  - 新增轻量 `review_stage` 和 `stage_summary()`。
+  - 根据评价入口、选项、文本框、TYPE、COMPLETE 更新 `review_entry_opened / review_option_selected / review_text_focused / review_typed / review_finish_ready` 等阶段语义。
+- `code-for-student/utils/prompt_builder.py`
+  - 在 prompt 中加入当前阶段摘要，帮助模型理解评价流程状态。
+- `code-for-student/utils/jsonl_logger.py`
+  - JSONL 日志增加 `stage_summary`，便于后续首错追踪。
+- `tools/test_review_state_machine.py`
+  - 将抖音 LP after-TYPE 期望从顶部点击改为 `COMPLETE`。
+  - 新增京东、拼多多 after-TYPE 仍保持 `COMPLETE` 的保分回归。
+- `tools/pseudo_hidden_checks.py`
+  - 扩展到 200 条机制测试。
+  - 新增抖音 LP 表单 after-TYPE 多轨迹、多错误动作都收敛到 `COMPLETE`。
+  - 新增显式“发布 / 发送 / 提交 / 发表”仍保持点击顶部提交的保护用例。
+  - 新增京东、拼多多、淘宝 after-TYPE 不被抖音规则污染的参数化回归。
+  - 新增社交评论 after-TYPE 仍点击右下角发送的参数化回归。
+- `doc/官方日志驱动实验矩阵_20260506.md`
+  - 新增 A/B 包实验说明、触发条件和下一轮官方日志判据。
+- `submission/src`
+  - 已同步本轮修改过的 `state_machine.py`、`memory.py`、`prompt_builder.py`、`jsonl_logger.py`。
+- `submission/doc`
+  - 已清理大量中间日志、CSV、旧分析和 research 目录，只保留 5 个核心文档：算法设计、冲分路线图、官方日志驱动实验矩阵、阶段优化实施记录、项目交接。
+
+验证结果：
+
+```text
+python .\tools\test_review_state_machine.py
+结果：通过
+
+python .\tools\test_action_verifier.py
+结果：通过
+
+python .\tools\pseudo_hidden_checks.py
+结果：200/200 通过
+
+python -m py_compile ...
+结果：通过
+
+code-for-student 与 submission/src 核心 Python 文件对比
+结果：python_file_compare_errors=0
+
+cd code-for-student
+python .\test_runner.py --output_dir .\output_noapi_after_douyin_step6_plan --no_debug_test
+结果：11/11 = 100.00%
+```
+
+打包与清理：
+
+- 已删除本轮公开回归输出目录 `code-for-student/output_noapi_after_douyin_step6_plan`。
+- 已删除本轮产生的 `__pycache__`。
+- 已用规范 `/` 路径重建 `D:\github\Zhongxing\submission.zip`。
+- 包内根目录只有 `doc` 和 `src`。
+- 包内条目数 `25`。
+- 包内无 `__pycache__`、无 `.pyc/.pyo`、无 `doc/doc`、无反斜杠路径。
+- 解压后导入并实例化 `Agent` 正常。
+
+最终提交包：
+
+```text
+path: D:\github\Zhongxing\submission.zip
+sha256: 7940811C0D4F191501B96E597F980667045F15EE04C0C66476D7E5DA69844E9E
+size: 83981 bytes
+entries: 25
+roots: doc, src
+has src/agent.py: yes
+```
+
+下一轮官方日志判据：
+
+1. 如果 `douyin_lp_scene_0` step6 变为 `COMPLETE` 且通过，继续分析新的首个失败用例。
+2. 如果 step6 返回 `Action mismatch: expect [CLICK], got [COMPLETE]`，说明 A 包假设失败，立即切换 B 包方案：保留抖音 LP 轨迹识别，但搜索新的 after-TYPE 点击区域，不能回到顶部 `[695,145]`。
+3. 如果 step6 仍输出 `[695,145]`，优先核验是否上传了当前 SHA256 `794081...4E9E` 的 zip。
+4. 如果京东或拼多多回退失败，立刻撤回影响普通电商 after-TYPE `COMPLETE` 的变更，只保留抖音窄域逻辑。
+
+## 2026-05-06 A 包独立复核与提交前确认
+
+本轮在上一阶段实现完成后做独立复核，没有继续扩大规则范围。核心判断仍然是：当前官方首错只有 `douyin_lp_scene_0` step6 after-TYPE 顶部点击出界，因此当前包应该只验证 A 包假设，即抖音 LP 表单评价输入后无显式发布词时输出 `COMPLETE`，不要动京东、拼多多和社交评论保分路径。
+
+复核内容：
+
+- 检查 `code-for-student/utils/state_machine.py`：`looks_like_douyin_lp_form_flow(memory)` 只匹配 `[605,695] -> [500,520] -> 顶部选项 -> 文本框 -> TYPE` 的抖音 LP 商品评价轨迹；无 `发布 / 发送 / 提交 / 发表` 时返回 `COMPLETE`。
+- 检查 `code-for-student/utils/validator.py`：after-TYPE 仍由 `_post_review_action()` 进入 `ReviewFinishStateMachine`，普通电商评价保持 `COMPLETE`，社交评论保持右下角发送。
+- 检查 `submission/doc`：当前只保留 5 个核心文档，没有重新加入中间日志、旧 CSV 或 research 噪声文件。
+- 检查 `code-for-student` 与 `submission/src`：核心 Python 文件哈希一致，`python_file_compare_errors=0`。
+
+复核测试结果：
+
+```text
+python .\tools\test_review_state_machine.py
+结果：通过
+
+python .\tools\test_action_verifier.py
+结果：通过
+
+python .\tools\pseudo_hidden_checks.py
+结果：200/200 通过
+
+python -m py_compile ...
+结果：通过
+
+cd code-for-student
+python .\test_runner.py --output_dir .\output_noapi_after_douyin_step6_plan --no_debug_test
+结果：11/11 = 100.00%
+```
+
+包级复核：
+
+```text
+path: D:\github\Zhongxing\submission.zip
+sha256: 7940811C0D4F191501B96E597F980667045F15EE04C0C66476D7E5DA69844E9E
+size: 83981 bytes
+entries: 25
+roots: doc, src
+has src/agent.py: yes
+bad_entries: 0
+Agent import and instantiate: OK
+```
+
+清理操作：
+
+- 删除 `code-for-student/output_noapi_after_douyin_step6_plan`。
+- 删除本轮测试产生的 `code-for-student/__pycache__`、`code-for-student/utils/__pycache__`、`submission/src/__pycache__`、`submission/src/utils/__pycache__`。
+
+提交建议：
+
+下一次提交必须上传当前 `D:\github\Zhongxing\submission.zip`，并记录 SHA256 `7940811C0D4F191501B96E597F980667045F15EE04C0C66476D7E5DA69844E9E`。如果官方日志仍显示 step6 输出 `[695,145]`，优先判断为上传了旧包或平台缓存；如果官方日志显示 `expect CLICK got COMPLETE`，则 A 包假设失败，下一轮只切换 Douyin step6 的 B 包点击候选，不要重写全局评价逻辑。

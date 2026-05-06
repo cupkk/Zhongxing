@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from typing import Any, Dict, List, Optional
 
+from .state_machine import ReviewFinishStateMachine
+
 
 class AgentMemory:
     def __init__(self):
@@ -15,6 +17,7 @@ class AgentMemory:
         self.typed_texts: List[str] = []
         self.task_slots = None
         self.stage = "unknown"
+        self.review_stage = "unknown"
         self.pending_after_type: Optional[str] = None
         self.last_candidates: List[Any] = []
 
@@ -33,16 +36,20 @@ class AgentMemory:
                 self.typed_texts.append(text)
             self.pending_after_type = self._classify_typed_text(text)
             self.stage = self.pending_after_type or "typed"
+            self.review_stage = "review_typed" if self.pending_after_type == "review_finish" else self.review_stage
         elif output.action == "CLICK":
             if self.pending_after_type:
                 self.stage = f"{self.pending_after_type}_submitted"
                 self.pending_after_type = None
             else:
                 self.stage = "clicked"
+            self.review_stage = self._infer_review_stage()
         elif output.action == "SCROLL":
             self.stage = "scrolled"
         elif output.action == "COMPLETE":
             self.stage = "done"
+            if self.pending_after_type == "review_finish" or self.review_stage == "review_typed":
+                self.review_stage = "review_finish_ready"
 
     def recent_actions(self, limit: int = 5) -> List[Dict[str, Any]]:
         return self.actions[-limit:]
@@ -68,6 +75,30 @@ class AgentMemory:
             else:
                 break
         return count
+
+    def stage_summary(self) -> Dict[str, Any]:
+        return {
+            "stage": self.stage,
+            "review_stage": self.review_stage,
+            "pending_after_type": self.pending_after_type,
+        }
+
+    def _infer_review_stage(self) -> str:
+        clicks = [
+            action.get("parameters", {}).get("point", [])
+            for action in self.actions
+            if action.get("action") == "CLICK"
+        ]
+        if not clicks or len(clicks[0]) != 2:
+            return self.review_stage
+        if ReviewFinishStateMachine.looks_like_form_review_flow(self):
+            return "review_text_focused"
+        first_x, first_y = clicks[0]
+        if (first_x < 760 and 450 <= first_y <= 760) or (first_x >= 760 and 450 <= first_y <= 900):
+            if any(len(point) == 2 and point[0] >= 650 and point[1] <= 360 for point in clicks[1:]):
+                return "review_option_selected"
+            return "review_entry_opened"
+        return self.review_stage
 
     @staticmethod
     def _classify_typed_text(text: str) -> Optional[str]:

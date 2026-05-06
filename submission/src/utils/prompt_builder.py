@@ -23,6 +23,7 @@ class PromptBuilder:
 
         history_actions = input_data.history_actions[-6:] if getattr(input_data, "history_actions", None) else []
         candidate_text = self._format_candidates(getattr(memory, "last_candidates", []))
+        stage_summary = memory.stage_summary() if hasattr(memory, "stage_summary") else {"stage": getattr(memory, "stage", "unknown")}
 
         prompt = f"""你是一个移动端 GUI Agent。你需要根据当前手机截图、用户任务和历史动作，决定下一步唯一操作。
 
@@ -36,6 +37,9 @@ class PromptBuilder:
 
 最近历史动作：
 {recent}
+
+当前阶段摘要：
+{stage_summary}
 
 评测器历史动作：
 {history_actions}
