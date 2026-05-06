@@ -11,6 +11,7 @@ import logging
 
 from agent_base import BaseAgent, AgentInput, AgentOutput
 from utils.candidate_miner import CandidateMiner
+from utils.action_verifier import ActionVerifier
 from utils.memory import AgentMemory
 from utils.jsonl_logger import DecisionLogger
 from utils.output_parser import OutputParser
@@ -29,6 +30,7 @@ class Agent(BaseAgent):
         self.prompt_builder = PromptBuilder()
         self.output_parser = OutputParser()
         self.validator = ActionValidator()
+        self.action_verifier = ActionVerifier()
         self.policy = RulePolicy()
         self.decision_logger = DecisionLogger()
         self.candidate_miner = CandidateMiner()
@@ -48,15 +50,16 @@ class Agent(BaseAgent):
             has_api_key=bool(self.api_key),
         )
         if pre_decision is not None:
-            output = self.validator.validate(pre_decision, input_data, self.memory, task_slots)
-            output.raw_output = f"rule:{pre_decision}"
+            verified_decision = self.action_verifier.verify(pre_decision, input_data, self.memory, task_slots)
+            output = self.validator.validate(verified_decision, input_data, self.memory, task_slots)
+            output.raw_output = f"rule:{pre_decision}; verified:{verified_decision}"
             self.decision_logger.log(
                 input_data=input_data,
                 task_slots=task_slots,
                 memory=self.memory,
                 source="rule",
                 raw_output=output.raw_output,
-                parsed_decision=pre_decision,
+                parsed_decision={"original": pre_decision, "verified": verified_decision},
                 final_output=output,
             )
             self.memory.update(output, input_data)
@@ -71,14 +74,16 @@ class Agent(BaseAgent):
             decision = self.output_parser.parse(raw_output)
             if not decision.get("action"):
                 decision = self.policy.fallback_decide(input_data, self.memory, task_slots)
-            output = self.validator.validate(decision, input_data, self.memory, task_slots)
+            verified_decision = self.action_verifier.verify(decision, input_data, self.memory, task_slots)
+            output = self.validator.validate(verified_decision, input_data, self.memory, task_slots)
             output.raw_output = raw_output
             output.usage = self.extract_usage_info(response)
         except Exception as exc:
             logger.exception("VLM decision failed, using safe fallback: %s", exc)
             fallback = self.policy.no_api_fallback(input_data, self.memory, task_slots)
             decision = fallback
-            output = self.validator.validate(fallback, input_data, self.memory, task_slots)
+            verified_decision = self.action_verifier.verify(fallback, input_data, self.memory, task_slots)
+            output = self.validator.validate(verified_decision, input_data, self.memory, task_slots)
             output.raw_output = f"fallback_after_error:{type(exc).__name__}:{exc}\n{raw_output}"
 
         self.decision_logger.log(
@@ -87,7 +92,7 @@ class Agent(BaseAgent):
             memory=self.memory,
             source="vlm" if raw_output else "fallback",
             raw_output=raw_output,
-            parsed_decision=decision,
+            parsed_decision={"original": decision, "verified": verified_decision},
             final_output=output,
             error="" if raw_output else output.raw_output,
         )

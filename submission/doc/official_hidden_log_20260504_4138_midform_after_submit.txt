@@ -1,0 +1,33 @@
+﻿[信息] 找到压缩包: /workspace/submit_dir/submission.zip
+[信息] 解压到: /tmp/gui-extract-cdrp1j_p
+[信息] 找到 agent.py: /tmp/gui-extract-cdrp1j_p/src/agent.py
+[信息] 运行目录准备完成: /tmp/gui-submit-runtime-856fjhzz/submit_runtime
+2026-05-04 05:10:44,281 - INFO - [提交阶段] Agent 配置校验通过
+2026-05-04 05:10:44,283 - INFO - Start testing case: douyin_lp_scene_0
+2026-05-04 05:10:44,283 - INFO - --- Step 1: Current Status 0 ---
+2026-05-04 05:10:48,143 - INFO - Agent Output: action=CLICK, params={'point': [605, 695]}
+2026-05-04 05:10:48,307 - INFO - --- Step 2: Current Status 1 ---
+2026-05-04 05:10:51,314 - INFO - Agent Output: action=CLICK, params={'point': [500, 520]}
+2026-05-04 05:10:51,410 - INFO - --- Step 3: Current Status 2 ---
+2026-05-04 05:10:54,369 - INFO - Agent Output: action=CLICK, params={'point': [695, 145]}
+2026-05-04 05:10:54,447 - INFO - --- Step 4: Current Status 3 ---
+2026-05-04 05:11:00,117 - INFO - Agent Output: action=CLICK, params={'point': [505, 600]}
+2026-05-04 05:11:00,200 - INFO - --- Step 5: Current Status 4 ---
+2026-05-04 05:11:02,849 - INFO - Agent Output: action=CLICK, params={'point': [505, 600]}
+2026-05-04 05:11:02,850 - INFO - [Checker] Action mismatch: expect [TYPE], got [CLICK]
+2026-05-04 05:11:02,939 - INFO - [TestRunner] 验证失败，终止后续执行 (debug_test=False)
+2026-05-04 05:11:02,940 - INFO - [No. 1: douyin_lp_scene_0] Result: FAIL
+2026-05-04 05:11:02,940 - INFO - Start testing case: jingdong_lp_scene_1
+2026-05-04 05:11:02,940 - INFO - --- Step 1: Current Status 0 ---
+2026-05-04 05:11:05,862 - INFO - Agent Output: action=CLICK, params={'point': [842, 836]}
+2026-05-04 05:11:06,022 - INFO - --- Step 2: Current Status 1 ---
+2026-05-04 05:11:09,192 - INFO - Agent Output: action=CLICK, params={'point': [500, 695]}
+2026-05-04 05:11:09,311 - INFO - --- Step 3: Current Status 2 ---
+2026-05-04 05:11:12,094 - INFO - Agent Output: action=CLICK, params={'point': [420, 860]}
+2026-05-04 05:11:12,095 - ERROR - [Checker] CLICK failed: (420, 860) not in scope
+2026-05-04 05:11:12,172 - INFO - [TestRunner] 验证失败，终止后续执行 (debug_test=False)
+2026-05-04 05:11:12,173 - INFO - [No. 2: jingdong_lp_scene_1] Result: FAIL
+2026-05-04 05:11:12,173 - INFO - Start testing case: pinduoduo_sl_scene_2
+2026-05-04 05:11:12,173 - INFO - --- Step 1: Current Status 0 ---
+2026-05-04 05:11:17,511 - INFO - Agent Output: action=CLICK, params={'point': [865, 550]}
+2026-05-04 05:11:32,122 - INFO - [No. 3: pinduoduo_sl_scene_2] Result: PASS

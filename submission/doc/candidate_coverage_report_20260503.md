@@ -1,0 +1,88 @@
+# Candidate Coverage Report
+
+- CLICK steps: 79
+- Covered: 79
+- Coverage: 100.00%
+
+## Coverage By Case
+- step_aiqiyi_onekey_0011: 9/9 = 100.00%
+- step_baidumap_onekey_0008: 7/7 = 100.00%
+- step_baidumap_onekey_0010: 7/7 = 100.00%
+- step_bilibili_onekey_0008: 5/5 = 100.00%
+- step_douyin_onekey_0008: 6/6 = 100.00%
+- step_kuaishou_onekey_0003: 7/7 = 100.00%
+- step_mangguo_onekey_0008: 5/5 = 100.00%
+- step_meituan_onekey_0001: 11/11 = 100.00%
+- step_quonekey_0030: 11/11 = 100.00%
+- step_tengxunshipin_onekey_0005: 6/6 = 100.00%
+- step_ximalaya_onekey_0001: 5/5 = 100.00%
+
+## Uncovered CLICK Steps
+
+## Matched Candidate Kinds
+- 1:top_search: 12
+- 2:top_right: 10
+- 28:top_far_right_action: 8
+- 10:search_submit_or_suggestion: 6
+- 25:top_right_text_button: 6
+- 6:bottom_right_send: 6
+- 9:bottom_right_tab: 6
+- 20:bottom_tab_5: 6
+- 24:keyboard_search_button: 6
+- 27:top_mid_right_action: 5
+- 36:right_filter_chip: 5
+- 13:popup_close_top_right: 4
+- 3:first_card: 4
+- 59:travel_city_select_left: 4
+- 37:mid_filter_option_left: 3
+- 35:episode_card_mid: 3
+- 4:middle_button: 3
+- 21:right_upper_review_entry: 3
+- 33:media_content_left_panel: 3
+- 34:media_result_row: 3
+- 46:map_header_right_action: 3
+- 47:map_right_result_action: 3
+- 52:top_left_center_action: 3
+- 61:travel_search_button_left: 3
+- 58:travel_city_search_box: 3
+- 62:travel_sort_filter_right: 3
+- 38:top_right_wide_header: 2
+- 30:media_result_lower_row: 2
+- 40:iqiyi_video_result_row: 2
+- 63:review_entry_list_row: 2
+- 31:bottom_left_action: 2
+- 32:upper_left_option: 2
+- 11:right_middle_review_entry: 2
+- 12:lower_middle_review_entry: 2
+- 22:center_review_entry: 2
+- 29:right_mid_icon: 2
+- 39:right_middle_search_icon: 2
+- 65:media_right_mid_action: 2
+- 44:address_result_full_row_1: 2
+- 48:map_voice_entry_small: 2
+- 42:map_center_entry: 2
+- 43:map_form_row_mid: 2
+- 45:address_result_full_row_2: 2
+- 49:service_grid_left_top: 2
+- 50:top_search_row: 2
+- 53:right_add_button: 2
+- 56:travel_flight_entry_tile: 2
+- 57:travel_city_field_left: 2
+- 7:bottom_center_submit: 1
+- 16:bottom_tab_1: 1
+- 17:bottom_tab_2: 1
+- 18:bottom_tab_3: 1
+- 5:bottom_input: 1
+- 14:popup_cancel_bottom: 1
+- 15:popup_allow_bottom: 1
+- 23:lower_right_review_entry: 1
+- 64:review_star_or_score_area: 1
+- 66:bottom_right_review_entry: 1
+- 26:top_header_search_full: 1
+- 41:douyin_profile_content_panel: 1
+- 19:bottom_tab_4: 1
+- 8:left_top_back: 1
+- 51:full_result_row_top: 1
+- 54:checkout_button: 1
+- 55:address_choice_row: 1
+- 60:travel_city_field_right: 1

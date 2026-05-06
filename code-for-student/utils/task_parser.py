@@ -11,6 +11,7 @@ from .app_map import detect_app_name
 
 @dataclass
 class TaskSlots:
+    instruction: str = ""
     app_name: str = ""
     task_type: str = "generic"
     shop: str = ""
@@ -46,7 +47,7 @@ def _first_match(patterns: List[str], text: str, group: int = 1) -> str:
 def parse_task(instruction: str) -> TaskSlots:
     text = instruction or ""
     app_name = detect_app_name(text) or ""
-    slots = TaskSlots(app_name=app_name)
+    slots = TaskSlots(instruction=text, app_name=app_name)
 
     if app_name == "美团" or "外卖" in text:
         slots.task_type = "takeaway_order"
@@ -118,6 +119,8 @@ def parse_task(instruction: str) -> TaskSlots:
     explicit_query = ""
     comment_text = _first_match(
         [
+            r"(?:评价|晒单|好评|差评)(?:一下|订单|商品|这[个款件台部张本条只双份盒包瓶辆辆]?)?(?:[^:：]{0,30})[:：]\s*[“\"']?(.+?)[”\"']?$",
+            r"(?:给|为).{0,30}?(?:写|发|发布|发表|提交)(?:一条|一段)?(?:评价|评论|晒单|好评|差评)(?:内容)?(?:为|是|[:：])\s*[“\"']?(.+?)[”\"']?$",
             r"(?:发布|发送|发表|输入|写下|写|评论)(?:一条)?(?:评论|留言)?(?:内容)?(?:为|是|[:：])\s*[“\"']?(.+?)[”\"']?(?:，|,|。|$)",
             r"[“\"'](.+?)[”\"'](?:这条)?(?:评论|留言)",
             r"(?:评论|留言)[“\"'](.+?)[”\"']",

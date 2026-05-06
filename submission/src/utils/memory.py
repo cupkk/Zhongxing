@@ -73,7 +73,10 @@ class AgentMemory:
     def _classify_typed_text(text: str) -> Optional[str]:
         if not text:
             return None
-        review_markers = ("好", "满意", "质量", "牢固", "实惠", "设计", "吸水", "喜欢", "推荐", "不错")
+        strong_review_markers = ("好看", "好用", "满意", "推荐", "不错", "喜欢", "值得", "赞")
+        review_markers = ("好", "质量", "牢固", "实惠", "设计", "吸水", "方便", "容量", "速度")
+        if len(text) >= 5 and any(marker in text for marker in strong_review_markers):
+            return "review_finish"
         if len(text) >= 8 and any(marker in text for marker in review_markers):
             return "review_finish"
         return "submit_after_type"

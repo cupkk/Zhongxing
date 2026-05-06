@@ -1,0 +1,12 @@
+﻿case,step,category,expected_action,actual_action,click_point,last_action,checker,token_total
+step_aiqiyi_onekey_0011,3,click_miss,,,"250,550","CLICK {'point': [250, 550]}","2026-04-29 17:54:16,108 - ERROR - [Checker] CLICK failed: (250, 550) not in ([191, 766], [50, 91])",2187
+step_baidumap_onekey_0008,5,click_miss,,,"824,726","CLICK {'point': [824, 726]}","2026-04-29 17:54:45,785 - ERROR - [Checker] CLICK failed: (824, 726) not in ([139, 825], [47, 94])",7771
+step_baidumap_onekey_0010,3,click_miss,,,"124,448","CLICK {'point': [124, 448]}","2026-04-29 17:55:01,314 - ERROR - [Checker] CLICK failed: (124, 448) not in ([433, 564], [416, 487])",10142
+step_douyin_onekey_0008,5,wrong_action,CLICK,TYPE,,TYPE {'text': '跳舞的视频'},"2026-04-29 17:55:50,459 - INFO - [Checker] Action mismatch: expect [CLICK], got [TYPE]",21243
+step_kuaishou_onekey_0003,3,wrong_action,CLICK,TYPE,,TYPE {'text': '动画片'},"2026-04-29 17:56:00,201 - INFO - [Checker] Action mismatch: expect [CLICK], got [TYPE]",23357
+step_mangguo_onekey_0008,7,extra_click_after_done,COMPLETE,CLICK,,"CLICK {'point': [250, 631]}","2026-04-29 17:56:46,307 - INFO - [Checker] Action mismatch: expect [COMPLETE], got [CLICK]",32692
+step_meituan_onekey_0001,2,click_miss,,,"791,113","CLICK {'point': [791, 113]}","2026-04-29 17:56:54,470 - ERROR - [Checker] CLICK failed: (791, 113) not in ([50, 158], [155, 235])",33827
+step_quonekey_0030,4,click_miss,,,"362,493","CLICK {'point': [362, 493]}","2026-04-29 17:57:10,919 - ERROR - [Checker] CLICK failed: (362, 493) not in ([125, 939], [144, 186])",37166
+step_tengxunshipin_onekey_0005,6,click_miss,,,"416,452","CLICK {'point': [416, 452]}","2026-04-29 17:57:52,934 - ERROR - [Checker] CLICK failed: (416, 452) not in ([64, 633], [364, 416])",42818
+step_bilibili_onekey_0008,2,click_miss,,,"500,120","CLICK {'point': [500, 120]}","2026-04-29 21:03:56,725 - ERROR - [Checker] CLICK failed: (500, 120) not in ([185, 718], [56, 99])",30365
+step_ximalaya_onekey_0001,2,click_miss,,,"500,120","CLICK {'point': [500, 120]}","2026-04-29 21:04:17,402 - ERROR - [Checker] CLICK failed: (500, 120) not in ([754, 954], [22, 59])",30365

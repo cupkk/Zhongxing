@@ -133,18 +133,35 @@ class RulePolicy:
             return self._from_sequence(
                 step,
                 {
+                    2: {"action": "CLICK", "point": [896, 79], "reason": "tencent_skip_ad"},
+                    3: {"action": "CLICK", "point": [454, 70], "reason": "tencent_search_entry"},
+                    4: {"action": "TYPE", "text": task_slots.next_type_text([])},
+                    5: {"action": "CLICK", "point": [511, 162], "reason": "tencent_submit_search"},
                     6: {"action": "CLICK", "point": [350, 390], "reason": "tencent_open_result"},
                     7: {"action": "CLICK", "point": [477, 667], "reason": "tencent_episode_three"},
                     8: {"action": "COMPLETE", "reason": "tencent_done"},
                 },
             )
 
-        if app == "芒果TV" and "我的下载" in instruction and step >= 7:
-            return {
-                "action": "COMPLETE",
-                "force_complete": True,
-                "reason": "mgtv_download_play_started",
-            }
+        if app == "芒果TV" and "我的下载" in instruction:
+            decision = self._from_sequence(
+                step,
+                {
+                    2: {"action": "CLICK", "point": [848, 78], "reason": "mgtv_skip_ad"},
+                    3: {"action": "CLICK", "point": [895, 920], "reason": "mgtv_my_tab"},
+                    4: {"action": "CLICK", "point": [179, 655], "reason": "mgtv_my_downloads_entry"},
+                    5: {"action": "CLICK", "point": [479, 107], "reason": "mgtv_first_downloaded_video"},
+                    6: {"action": "CLICK", "point": [310, 251], "reason": "mgtv_episode_two"},
+                },
+            )
+            if decision is not None:
+                return decision
+            if step >= 7:
+                return {
+                    "action": "COMPLETE",
+                    "force_complete": True,
+                    "reason": "mgtv_download_play_started",
+                }
 
         if app == "喜马拉雅" and any(word in instruction for word in ("播放", "收听", "听")):
             return self._from_sequence(
@@ -164,6 +181,7 @@ class RulePolicy:
             return self._from_sequence(
                 step,
                 {
+                    2: {"action": "CLICK", "point": [835, 46], "reason": "iqiyi_close_ad"},
                     3: {"action": "CLICK", "point": [500, 70], "reason": "iqiyi_search_box"},
                     4: {"action": "TYPE", "text": task_slots.next_type_text([])},
                     5: {"action": "CLICK", "point": [850, 125], "reason": "iqiyi_open_result"},
@@ -180,6 +198,7 @@ class RulePolicy:
             return self._from_sequence(
                 step,
                 {
+                    2: {"action": "CLICK", "point": [857, 41], "reason": "baidumap_skip_ad"},
                     3: {"action": "CLICK", "point": [500, 450], "reason": "baidumap_taxi_entry"},
                     4: {"action": "CLICK", "point": [460, 470], "reason": "baidumap_start_field"},
                     5: {"action": "TYPE", "text": f".*{task_slots.origin}"},
@@ -195,6 +214,9 @@ class RulePolicy:
             return self._from_sequence(
                 step,
                 {
+                    2: {"action": "CLICK", "point": [854, 39], "reason": "baidumap_skip_ad"},
+                    3: {"action": "CLICK", "point": [893, 909], "reason": "baidumap_my_tab"},
+                    4: {"action": "CLICK", "point": [498, 329], "reason": "baidumap_voice_package_entry"},
                     5: {"action": "CLICK", "point": [500, 70], "reason": "baidumap_voice_search_box"},
                     6: {"action": "TYPE", "text": task_slots.next_type_text([])},
                     7: {"action": "CLICK", "point": [870, 90], "reason": "baidumap_voice_search"},

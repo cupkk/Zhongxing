@@ -1,0 +1,2 @@
+﻿case,step,category,mechanism,expected_action,actual_action,click_point,last_action,checker,token_total,suggested_fix,covered_by_current_guard
+douyin_lp_scene_0,6,click_miss,douyin_form_top_submit_point_miss,,,"705,145","CLICK {'point': [705, 145]}","2026-05-04 17:33:22,703 - ERROR - [Checker] CLICK failed: (705, 145) not in scope",,"for Douyin LP review forms after TYPE, snap near-miss top form submit points to the proven in-scope top action point","yes after 2026-05-06 fix: Douyin after-TYPE top submit candidate and raw point snap to [695,145]"

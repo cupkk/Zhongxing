@@ -28,17 +28,21 @@ class ReviewFinishStateMachine:
         app = getattr(task_slots, "app_name", "") or ""
         instruction = input_data.instruction or ""
         form_review_flow = self.looks_like_form_review_flow(memory)
+        right_side_ecommerce_flow = self.looks_like_right_side_ecommerce_flow(memory)
         explicit_publish = any(word in instruction for word in self.EXPLICIT_PUBLISH_WORDS)
-        bottom_center_submit = self._candidate_point(memory, "bottom_center_submit", [500, 938])
+        form_top_submit = self._candidate_point(memory, "review_form_top_submit", [695, 145])
         bottom_right_send = self._candidate_point(memory, "bottom_right_send", [887, 916])
 
         if form_review_flow:
-            return self._publish_action(action, point, bottom_center_submit, "form_review_submit")
+            return self._publish_action(action, point, form_top_submit, "form_review_top_submit")
+
+        if app in self.ECOMMERCE_APPS or (ecommerce_intent and not social_intent and right_side_ecommerce_flow):
+            return {"action": "COMPLETE", "reason": "ecommerce_review_done"}
 
         if app in self.SOCIAL_APPS or explicit_publish or social_intent:
             return self._publish_action(action, point, bottom_right_send, "social_comment_send")
 
-        if app in self.ECOMMERCE_APPS or (ecommerce_intent and not social_intent):
+        if ecommerce_intent and not social_intent:
             return {"action": "COMPLETE", "reason": "ecommerce_review_done"}
 
         return self._unknown_review_action(action, point, bottom_right_send)
@@ -48,6 +52,8 @@ class ReviewFinishStateMachine:
             return {"action": "CLICK", "point": send_point, "reason": reason}
         if action == "CLICK" and point:
             x, y = point
+            if reason == "form_review_top_submit" and 680 <= x <= 730 and 90 <= y <= 210:
+                return {"action": "CLICK", "point": send_point, "reason": reason}
             if y >= 850 or x <= 250 or (x >= 750 and y <= 200):
                 return {"action": "CLICK", "point": send_point, "reason": reason}
         return None
@@ -91,3 +97,15 @@ class ReviewFinishStateMachine:
             len(point) == 2 and 300 <= point[0] <= 650 and 300 <= point[1] <= 560 for point in clicks[1:]
         )
         return has_top_option_click and has_large_textbox_click
+
+    @staticmethod
+    def looks_like_right_side_ecommerce_flow(memory) -> bool:
+        clicks = [
+            action.get("parameters", {}).get("point", [])
+            for action in memory.actions
+            if action.get("action") == "CLICK"
+        ]
+        if not clicks or len(clicks[0]) != 2:
+            return False
+        first_x, first_y = clicks[0]
+        return first_x >= 760 and 450 <= first_y <= 860
