@@ -226,7 +226,10 @@ def build_review_finish_cases() -> List[CheckCase]:
     douyin_finish_decisions = [
         ("complete", {"action": "COMPLETE"}),
         ("top_raw", {"action": "CLICK", "point": [695, 145]}),
+        ("top_submit_raw", {"action": "CLICK", "point": [705, 145]}),
+        ("after_type_right_top_raw", {"action": "CLICK", "point": [850, 145]}),
         ("top_right_raw", {"action": "CLICK", "point": [885, 125]}),
+        ("bottom_center_raw", {"action": "CLICK", "point": [500, 938]}),
         ("bottom_send", {"action": "CLICK", "point": [887, 916]}),
         ("scroll", {"action": "SCROLL", "scroll_direction": "down"}),
     ]
@@ -242,7 +245,7 @@ def build_review_finish_cases() -> List[CheckCase]:
         for decision_name, decision in douyin_finish_decisions:
             cases.append(
                 CheckCase(
-                    f"douyin_lp_form_after_type_complete_{variant_index}_{decision_name}",
+                    f"douyin_lp_form_after_type_submit_{variant_index}_{decision_name}",
                     "去抖音给手机支架写评价：这个手机支架很好用，吸附牢固，设计美观，非常满意！",
                     6,
                     prior_actions=[
@@ -255,7 +258,7 @@ def build_review_finish_cases() -> List[CheckCase]:
                     typed_texts=[text],
                     pending_after_type="review_finish",
                     decision=decision,
-                    predicate=expect_action("COMPLETE"),
+                    predicate=expect_target_kind("review_form_after_type_submit"),
                 )
             )
 

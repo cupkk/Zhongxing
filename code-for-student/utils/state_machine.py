@@ -31,11 +31,12 @@ class ReviewFinishStateMachine:
         right_side_ecommerce_flow = self.looks_like_right_side_ecommerce_flow(memory)
         explicit_publish = any(word in instruction for word in self.EXPLICIT_PUBLISH_WORDS)
         form_top_submit = self._candidate_point(memory, "review_form_top_submit", [695, 145])
+        form_after_type_submit = self._candidate_point(memory, "review_form_after_type_submit", [500, 760])
         bottom_right_send = self._candidate_point(memory, "bottom_right_send", [887, 916])
 
         if form_review_flow:
             if self.looks_like_douyin_lp_form_flow(memory) and not explicit_publish:
-                return {"action": "COMPLETE", "reason": "douyin_lp_form_review_done"}
+                return {"action": "CLICK", "point": form_after_type_submit, "reason": "douyin_lp_form_after_type_submit"}
             return self._publish_action(action, point, form_top_submit, "form_review_top_submit")
 
         if app in self.ECOMMERCE_APPS or (ecommerce_intent and not social_intent and right_side_ecommerce_flow):

@@ -213,7 +213,8 @@ def build_scenarios() -> List[Scenario]:
             typed_texts=[review_text],
             pending_after_type="review_finish",
             decision={"action": "COMPLETE"},
-            expected_action="COMPLETE",
+            expected_action="CLICK",
+            expected_point=[500, 760],
             expected_stage="review_finish_ready",
         ),
         Scenario(
@@ -245,7 +246,8 @@ def build_scenarios() -> List[Scenario]:
             typed_texts=[review_text],
             pending_after_type="review_finish",
             decision={"action": "CLICK", "point": [705, 145]},
-            expected_action="COMPLETE",
+            expected_action="CLICK",
+            expected_point=[500, 760],
         ),
         Scenario(
             name="ecommerce_review_after_type_completes",

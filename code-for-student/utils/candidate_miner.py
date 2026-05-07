@@ -191,6 +191,7 @@ class CandidateMiner:
             UIElement(66, "bottom_right_review_entry", (760, 782, 924, 890), hint="bottom-right ecommerce review entry", score=0.08),
             UIElement(67, "review_text_area", (300, 300, 540, 430), hint="large review text input area", score=0.08),
             UIElement(68, "review_form_top_submit", (650, 105, 740, 185), hint="top form publish or submit action", score=0.08),
+            UIElement(69, "review_form_after_type_submit", (430, 720, 570, 800), hint="post-text review form publish or submit action", score=0.08),
         ]
 
     @staticmethod

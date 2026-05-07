@@ -39,8 +39,12 @@ class AgentMemory:
             self.review_stage = "review_typed" if self.pending_after_type == "review_finish" else self.review_stage
         elif output.action == "CLICK":
             if self.pending_after_type:
+                pending = self.pending_after_type
                 self.stage = f"{self.pending_after_type}_submitted"
                 self.pending_after_type = None
+                if pending == "review_finish":
+                    self.review_stage = "review_finish_ready"
+                    return
             else:
                 self.stage = "clicked"
             self.review_stage = self._infer_review_stage()
